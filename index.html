@@ -11,35 +11,125 @@
   <body>
     <main>
       <section
-        class="m-4 flex max-w-md flex-col gap-2 rounded border-2 border-black p-2"
+        class="m-4 flex max-w-lg flex-col gap-2 rounded border-2 border-black p-2"
         x-data="{
-            list: [
-              { label: 'test', state: 'open', category: 'bg-red-500', binned: false }
-            ]
+            list: JSON.parse(localStorage.getItem('todo')) || [],
+
+            inputValue: '',
+            search: '',
+            category: '',
+            showOpen: true,
+            showClosed: true,
+            showBinned: false,
+
+            remove(target) {
+              if (target.binned) {
+                this.list = this.list.filter(item => item !== target);
+              } else {
+                target.binned = true;
+              }
+            },
+
+            get filteredList() {
+              return this.list.filter(item => item.label.startsWith(this.search));
+            }
           }"
+        x-init="$watch('list', (val) => localStorage.setItem('todo', JSON.stringify(list)))"
       >
-        <h1>Todo</h1>
-        <form>
-          <div class="flex gap-2">
+        <h1 class="mx-auto">Todo</h1>
+        <form
+          class="mb-4"
+          @submit.prevent="list.push({ label: $event.target.label.value, completed: false, category, binned: false }); inputValue = ''"
+        >
+          <div class="flex gap-1">
             <label class="flex-grow">
               <input
+                name="label"
                 type="text"
+                required
                 placeholder="What do you want to do?"
                 class="focus:border-1 h-8 w-full flex-grow rounded border border-blue-500 px-2 focus:border-blue-100"
+                x-model="inputValue"
               />
             </label>
-            <button class="h-8 w-16 rounded bg-blue-500 text-white">Add</button>
+            <div class="flex gap-0.5">
+              <button
+                type="submit"
+                class="h-8 w-8 rounded bg-rose-800"
+                @click="category = 'bg-rose-800'"
+              ></button>
+              <button
+                type="submit"
+                class="h-8 w-8 rounded bg-cyan-700"
+                @click="category = 'bg-cyan-700'"
+              ></button>
+              <button
+                type="submit"
+                class="h-8 w-8 rounded bg-orange-600"
+                @click="category = 'bg-orange-600'"
+              ></button>
+              <button
+                type="submit"
+                class="h-8 w-8 rounded bg-indigo-700"
+                @click="category = 'bg-indigo-700'"
+              ></button>
+            </div>
           </div>
         </form>
-        <template x-for="item in list">
-          <ul class="flex gap-2">
-            <span class="w-8 rounded" :class="item.category"></span>
-            <div class="flex-grow rounded border-2 px-2">
-              <li x-text="item.label" x-text="item.tags" />
+        <div class="flex gap-2" x-show="list.length > 0">
+          <label class="flex-grow">
+            <input
+              class="mr-1 w-full flex-grow rounded border px-1"
+              placeholder="Search"
+              x-model="search"
+            />
+          </label>
+          <div class="flex gap-1">
+            <label>
+              Open
+              <input type="checkbox" x-model="showOpen" />
+            </label>
+            <label>
+              Closed
+              <input type="checkbox" x-model="showClosed" />
+            </label>
+            <label>
+              Binned
+              <input type="checkbox" x-model="showBinned" />
+            </label>
+          </div>
+        </div>
+        <template x-for="item in filteredList" :key="item.label">
+          <ul
+            class="flex gap-1"
+            x-show="showOpen && (!item.completed || showClosed) && (!item.binned || showBinned)"
+          >
+            <div
+              class="items flex w-8 cursor-pointer justify-center rounded"
+              :class="item.category"
+              @click="item.completed = !item.completed"
+            ></div>
+            <div class="flex-grow px-2">
+              <li
+                x-text="item.label"
+                class="cursor-pointer"
+                :class="item.completed ? 'line-through' : ''"
+                @click="item.completed = !item.completed"
+              ></li>
             </div>
-            <button class="h-8 w-16 rounded bg-red-500 text-white">
-              Remove
-            </button>
+            <button
+              type="button"
+              class="h-8 w-16 rounded bg-red-600 text-white"
+              x-text="item.binned ? 'Delete' : 'Bin'"
+              @click="remove(item)"
+            />
+            <button
+              type="button"
+              class="h-8 w-16 rounded bg-green-600 text-white"
+              x-show="item.binned"
+              x-text="'Restore'"
+              @click="item.binned = false"
+            />
           </ul>
         </template>
       </section>
