@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Todo</title>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <main>
+      <section
+        class="m-4 flex max-w-md flex-col gap-2 rounded border-2 border-black p-2"
+        x-data="{
+            list: [
+              { label: 'test', state: 'open', category: 'bg-red-500', binned: false }
+            ]
+          }"
+      >
+        <h1>Todo</h1>
+        <form>
+          <div class="flex gap-2">
+            <label class="flex-grow">
+              <input
+                type="text"
+                placeholder="What do you want to do?"
+                class="focus:border-1 h-8 w-full flex-grow rounded border border-blue-500 px-2 focus:border-blue-100"
+              />
+            </label>
+            <button class="h-8 w-16 rounded bg-blue-500 text-white">Add</button>
+          </div>
+        </form>
+        <template x-for="item in list">
+          <ul class="flex gap-2">
+            <span class="w-8 rounded" :class="item.category"></span>
+            <div class="flex-grow rounded border-2 px-2">
+              <li x-text="item.label" x-text="item.tags" />
+            </div>
+            <button class="h-8 w-16 rounded bg-red-500 text-white">
+              Remove
+            </button>
+          </ul>
+        </template>
+      </section>
+    </main>
+  </body>
+</html>
