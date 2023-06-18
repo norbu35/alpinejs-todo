@@ -15,6 +15,13 @@
         x-data="{
             list: JSON.parse(localStorage.getItem('todo')) || [],
 
+            categories: [
+              'rose-800',
+              'cyan-700',
+              'orange-600',
+              'indigo-700',
+            ],
+
             inputValue: '',
             search: '',
             category: '',
@@ -31,19 +38,28 @@
               }
             },
 
+            fuzzySearch(queryString, testString) {
+              const query = queryString.toLowerCase();
+              const test = testString.toLowerCase();
+              let queryMarker = 0;
+              let testMarker = 0;
+              while (queryMarker < query.length && testMarker < test.length) {
+                if (query[queryMarker] === test[testMarker]) queryMarker++;
+                testMarker++
+              }
+              return queryMarker === query.length;
+            },
+
             get filteredList() {
-              return this.list.filter(item => item.label.startsWith(this.search)).sort((a, b) => {  
-                if (a.binned && !b.binned) {
-                  return 1;
-                } else if (!a.binned && b.binned) {
-                  return -1;
-                } else {
-                  return 0;
-                }
-              });
-            }
+              return this.list.filter(item => {
+                if (!this.showOpen && !item.completed) return false;
+                if (!this.showClosed && item.completed) return false;
+                if (!this.showBinned && item.binned) return false;
+                return this.fuzzySearch(this.search, item.label);
+              }).sort((a, b) => a.binned - b.binned);
+            },
           }"
-        x-init="$watch('list', (val) => localStorage.setItem('todo', JSON.stringify(list)))"
+        x-effect="localStorage.setItem('todo', JSON.stringify(list))"
       >
         <h1 class="mx-auto">Todo</h1>
         <form
@@ -61,26 +77,14 @@
               />
             </label>
             <div class="flex gap-0.5">
-              <button
-                type="submit"
-                class="h-8 w-8 rounded bg-rose-800"
-                @click="category = 'bg-rose-800'"
-              ></button>
-              <button
-                type="submit"
-                class="h-8 w-8 rounded bg-cyan-700"
-                @click="category = 'bg-cyan-700'"
-              ></button>
-              <button
-                type="submit"
-                class="h-8 w-8 rounded bg-orange-600"
-                @click="category = 'bg-orange-600'"
-              ></button>
-              <button
-                type="submit"
-                class="h-8 w-8 rounded bg-indigo-700"
-                @click="category = 'bg-indigo-700'"
-              ></button>
+              <template x-for="color in categories">
+                <button
+                  type="submit"
+                  class="h-8 w-8 rounded"
+                  :class="'bg-' + color"
+                  @click="category = color"
+                />
+              </template>
             </div>
           </div>
         </form>
@@ -108,23 +112,19 @@
           </div>
         </div>
         <template x-for="item in filteredList" :key="item.id">
-          <ul
-            class="flex gap-1 mt-1"
-            x-show="showOpen && (!item.completed || showClosed) && (!item.binned || showBinned)"
-          >
+          <ul class="flex gap-1 mt-1">
             <div
               class="items flex w-8 cursor-pointer justify-center rounded"
-              :class="item.category"
+              :class="'bg-' + item.category"
               @click="item.completed = !item.completed"
             ></div>
             <div class="flex-grow px-2 border rounded">
               <li
                 x-text="item.label"
                 class="cursor-pointer"
-                :class="item.completed ? 'line-through' : ''"
-                :class="item.binned ? 'filter brightness-50' : ''"
+                :class="{ 'line-through': item.completed, 'block': item.binned, 'brightness': item.binned }"
                 @click="item.completed = !item.completed"
-              ></li>
+              />
             </div>
             <button
               type="button"
