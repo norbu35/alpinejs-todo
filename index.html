@@ -11,7 +11,7 @@
   <body>
     <main>
       <section
-        class="m-4 flex max-w-lg flex-col gap-2 rounded border-2 border-black p-2"
+        class="m-4 flex max-w-lg flex-col gap-2 rounded border-2 border-black p-4"
         x-data="{
             list: JSON.parse(localStorage.getItem('todo')) || [],
 
@@ -21,6 +21,7 @@
             showOpen: true,
             showClosed: true,
             showBinned: false,
+            id: 0,
 
             remove(target) {
               if (target.binned) {
@@ -31,15 +32,22 @@
             },
 
             get filteredList() {
-              return this.list.filter(item => item.label.startsWith(this.search));
+              return this.list.filter(item => item.label.startsWith(this.search)).sort((a, b) => {  
+                if (a.binned && !b.binned) {
+                  return 1;
+                } else if (!a.binned && b.binned) {
+                  return -1;
+                } else {
+                  return 0;
+                }
+              });
             }
           }"
         x-init="$watch('list', (val) => localStorage.setItem('todo', JSON.stringify(list)))"
       >
         <h1 class="mx-auto">Todo</h1>
         <form
-          class="mb-4"
-          @submit.prevent="list.push({ label: $event.target.label.value, completed: false, category, binned: false }); inputValue = ''"
+          @submit.prevent="list.push({ id: id++, label: $event.target.label.value, completed: false, category, binned: false }); inputValue = ''"
         >
           <div class="flex gap-1">
             <label class="flex-grow">
@@ -76,7 +84,7 @@
             </div>
           </div>
         </form>
-        <div class="flex gap-2" x-show="list.length > 0">
+        <div class="flex gap-2 mt-4" x-show="list.length > 0">
           <label class="flex-grow">
             <input
               class="mr-1 w-full flex-grow rounded border px-1"
@@ -99,9 +107,9 @@
             </label>
           </div>
         </div>
-        <template x-for="item in filteredList" :key="item.label">
+        <template x-for="item in filteredList" :key="item.id">
           <ul
-            class="flex gap-1"
+            class="flex gap-1 mt-1"
             x-show="showOpen && (!item.completed || showClosed) && (!item.binned || showBinned)"
           >
             <div
@@ -114,18 +122,19 @@
                 x-text="item.label"
                 class="cursor-pointer"
                 :class="item.completed ? 'line-through' : ''"
+                :class="item.binned ? 'filter brightness-50' : ''"
                 @click="item.completed = !item.completed"
               ></li>
             </div>
             <button
               type="button"
-              class="h-8 w-16 rounded bg-red-600 text-white"
+              class="h-8 w-16 rounded border-2 border-red-600 text-red-600"
               x-text="item.binned ? 'Delete' : 'Bin'"
               @click="remove(item)"
             />
             <button
               type="button"
-              class="h-8 w-16 rounded bg-green-600 text-white"
+              class="h-8 w-16 rounded border-2 border-green-900 text-green-900"
               x-show="item.binned"
               x-text="'Restore'"
               @click="item.binned = false"
