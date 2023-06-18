@@ -87,7 +87,7 @@
         <div class="flex gap-2 mt-4" x-show="list.length > 0">
           <label class="flex-grow">
             <input
-              class="mr-1 w-full flex-grow rounded border px-1"
+              class="mr-1 w-full flex-grow rounded border border-gray-500 px-1"
               placeholder="Search"
               x-model="search"
             />
@@ -117,7 +117,7 @@
               :class="item.category"
               @click="item.completed = !item.completed"
             ></div>
-            <div class="flex-grow px-2">
+            <div class="flex-grow px-2 border rounded">
               <li
                 x-text="item.label"
                 class="cursor-pointer"
